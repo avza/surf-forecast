@@ -35,6 +35,7 @@
     "@typescript-eslint/parser": "^4.29.1",
     "eslint": "^7.32.0",
     "jest": "^27.0.6",
+    "nock": "^13.1.1",
     "prettier": "^2.3.2",
     "supertest": "^6.1.5",
     "ts-jest": "^27.0.4",
