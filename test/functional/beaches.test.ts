@@ -1,7 +1,21 @@
+import AuthService from '@src/services/auth';
 import { Beach } from '@src/models/beach';
+import { User } from '@src/models/user';
 
 describe('Beaches functional tests', () => {
-  beforeAll(async () => await Beach.deleteMany());
+  const defaultUser = {
+    name: 'John Doe',
+    email: 'john@mail.com',
+    password: '1234',
+  };
+  let token: string;
+
+  beforeEach(async () => {
+    await Beach.deleteMany();
+    await User.deleteMany({});
+    const user = await new User(defaultUser).save();
+    token = AuthService.generateToken(user.toJSON());
+  });
 
   describe('When creating a beach', () => {
     it('should create a beach with success', async () => {
@@ -10,11 +24,20 @@ describe('Beaches functional tests', () => {
         lng: 151.289824,
         name: 'Manly',
         position: 'E',
+        user: 'fake-id',
       };
 
-      const response = await global.testRequest.post('/beaches').send(newBeach);
+      const response = await global.testRequest
+        .post('/beaches')
+        .set({ Authorization: token })
+        .send(newBeach);
       expect(response.status).toBe(201);
-      expect(response.body).toEqual(expect.objectContaining(newBeach));
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          ...newBeach,
+          ...{ user: expect.any(String) },
+        })
+      );
     });
 
     it('should return 422 when there is a validation error', async () => {
@@ -23,9 +46,13 @@ describe('Beaches functional tests', () => {
         lng: 151.289824,
         name: 'Manly',
         position: 'E',
+        user: 'fake-id',
       };
 
-      const response = await global.testRequest.post('/beaches').send(newBeach);
+      const response = await global.testRequest
+        .post('/beaches')
+        .set({ Authorization: token })
+        .send(newBeach);
       expect(response.status).toBe(422);
       expect(response.body).toEqual({
         error:
